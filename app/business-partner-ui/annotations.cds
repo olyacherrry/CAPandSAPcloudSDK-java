@@ -1,0 +1,1 @@
+using cloud.sdk.capng as service from '../../srv/cat-service';

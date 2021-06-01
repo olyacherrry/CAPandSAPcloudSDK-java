@@ -1,0 +1,59 @@
+_schema-version: "3.1"
+ID: cap-business-service
+description: cap-business-service application
+version: 1.0.0-SNAPSHOT
+modules:
+- name: cap-business-service-srv
+  type: java
+  path: srv
+  properties:
+    SPRING_PROFILES_ACTIVE: cloud
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  build-parameters:
+    build-result: target/*-exec.[wj]ar
+    builder: custom
+    commands:
+    - mvn clean package
+- name: cap-business-service-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: cap-business-service-repo-host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - businesspartnerui.zip
+      name: businesspartnerui
+      target-path: resources/
+- name: businesspartnerui
+  type: html5
+  path: app/business-partner-ui
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: cap-business-service-repo-host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: cap-business-service-html5-srv
+    service-plan: app-host
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+  - builder: custom
+    commands:
+    - npm install --production
+    - npx -p @sap/cds-dk cds build --production
